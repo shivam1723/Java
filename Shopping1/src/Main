@@ -1,0 +1,361 @@
+import customer.Customer;
+import customer.CustomerManager;
+import customer.User;
+import product.Product;
+import product.ProductManager;
+import order.OrderManager;
+import order.ShoppingCart;
+import login.LoginManager;
+
+import java.util.InputMismatchException;
+import java.util.Scanner;
+
+/**
+ * Main class for the Shopping application.
+ * This class handles the main entry point and user interactions for the application.
+ * It allows users to sign in as Admin or User, and perform various actions based on their roles.
+ * 
+ * Features:
+ * <p>
+ * - Admin can add products, view products, and view all customers.
+ * - Users can sign up, log in, search products, add products to cart, view cart, place orders, and view order history.
+ * </p>
+ * 
+ * Classes Used:
+ * <p>
+ * - ProductManager: Manages products in the system.
+ * - LoginManager: Handles user login and signup.
+ * - CustomerManager: Manages customer information.
+ * - OrderManager: Manages orders placed by customers.
+ * </p>
+ * 
+ * Methods:
+ * <p>
+ * - main(String[] args): Entry point of the application.
+ * - selectUser(Scanner scanner, LoginManager loginManager, ProductManager productManager, CustomerManager customerManager, OrderManager orderManager): Handles user selection between Admin and User.
+ * - handleAdminLogin(Scanner scanner, LoginManager loginManager, ProductManager productManager, CustomerManager customerManager): Handles Admin login and actions.
+ * - adminActions(Scanner scanner, ProductManager productManager, CustomerManager customerManager): Handles actions available to Admin.
+ * - handleUserOptions(Scanner scanner, LoginManager loginManager, ProductManager productManager, CustomerManager customerManager, OrderManager orderManager): Handles User signup, login, and actions.
+ * - customerActions(Scanner scanner, ProductManager productManager, Customer customer, OrderManager orderManager): Handles actions available to logged-in Users.
+ * </p>
+ * 
+ * Exception Handling:
+ * <p>
+ * - Catches InputMismatchException for invalid input types.
+ * - Catches general Exception for unexpected errors.
+ * </p>
+ * 
+ * Note:
+ * <p>
+ * - Scanner is closed in the finally block to ensure resource cleanup.
+ * </p>
+ * 
+ * @param args Command line arguments.
+ */
+
+public class Main {
+/**
+ * The Main class is the entry point of the shopping platform application.
+ * It manages user interactions and controls the flow of the program.
+ */
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        ProductManager productManager = new ProductManager();
+        LoginManager loginManager = new LoginManager();
+        CustomerManager customerManager = new CustomerManager();
+        OrderManager orderManager = new OrderManager();
+
+        // Add sample products
+        productManager.addProduct(new Product(1, "Laptop", 1000, "Electronics", 10));
+        productManager.addProduct(new Product(2, "Smartphone", 700, "Electronics", 5));
+
+        try {
+            selectUser(scanner, loginManager, productManager, customerManager, orderManager);
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
+        } finally {
+            scanner.close();
+        }
+    }
+
+    /**
+     * Handles user selection between Admin and Customer sign-in options.
+     *
+     * @param scanner          The Scanner object for user input.
+     * @param loginManager     The LoginManager instance for user authentication.
+     * @param productManager   The ProductManager instance for managing products.
+     * @param customerManager  The CustomerManager instance for managing customer data.
+     * @param orderManager     The OrderManager instance for handling orders.
+     */
+    private static void selectUser(Scanner scanner, LoginManager loginManager, ProductManager productManager, CustomerManager customerManager, OrderManager orderManager) {
+        while (true) {
+            try {
+                System.out.println("1. Sign in as Admin");
+                System.out.println("2. User");
+                System.out.print("Choose an option: ");
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+
+                switch (choice) {
+                    case 1:
+                        handleAdminLogin(scanner, loginManager, productManager, customerManager);
+                        break;
+                    case 2:
+                        handleUserOptions(scanner, loginManager, productManager, customerManager, orderManager);
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Please select 1 or 2.");
+                        break;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine();
+            }
+        }
+    }
+    /**
+     * Handles the admin login process and admin actions after successful login.
+     *
+     * @param scanner          The Scanner object for user input.
+     * @param loginManager     The LoginManager instance for user authentication.
+     * @param productManager   The ProductManager instance for managing products.
+     * @param customerManager  The CustomerManager instance for managing customer data.
+     */
+    private static void handleAdminLogin(Scanner scanner, LoginManager loginManager, ProductManager productManager, CustomerManager customerManager) {
+        while (true) {
+            try {
+                System.out.println("1. Login");
+                System.out.println("2. Exit");
+                System.out.print("Choose an option: ");
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter username: ");
+                        String username = scanner.nextLine();
+                        System.out.print("Enter password: ");
+                        String password = scanner.nextLine();
+                        User loggedInUser = loginManager.login(username, password);
+
+                        if (loggedInUser != null && loggedInUser.isAdmin()) {
+                            System.out.println("Logged in as Admin. Available products:");
+                            productManager.viewAllProducts();  // Show all products after login
+                            adminActions(scanner, productManager, customerManager);
+                        } else {
+                            System.out.println("Invalid Admin credentials.");
+                        }
+                        break;
+                    case 2:
+                        System.out.println("Exiting...");
+                        return;
+                    default:
+                        System.out.println("Invalid choice, try again.");
+                        break;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine();
+            }
+        }
+    }
+
+    /**
+     * Displays the admin actions available after a successful login.
+     *
+     * @param scanner          The Scanner object for user input.
+     * @param productManager   The ProductManager instance for managing products.
+     * @param customerManager  The CustomerManager instance for managing customer data.
+     */
+
+    private static void adminActions(Scanner scanner, ProductManager productManager, CustomerManager customerManager) {
+        while (true) {
+            try {
+                System.out.println("Admin Panel:");
+                System.out.println("1. Add Product");
+                System.out.println("2. View Products");
+                System.out.println("3. View All Customers");
+                System.out.println("4. Logout");
+                System.out.print("Choose an option: ");
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter Product ID: ");
+                        int id = scanner.nextInt();
+                        scanner.nextLine();
+                        System.out.print("Enter Product Name: ");
+                        String name = scanner.nextLine();
+                        System.out.print("Enter Product Price: ");
+                        double price = scanner.nextDouble();
+                        scanner.nextLine();
+                        System.out.print("Enter Product Category: ");
+                        String category = scanner.nextLine();
+                        System.out.print("Enter Product Stock: ");
+                        int stock = scanner.nextInt();
+                        scanner.nextLine();
+
+                        productManager.addProduct(new Product(id, name, price, category, stock));
+                        break;
+                    case 2:
+                        productManager.viewAllProducts();
+                        break;
+                    case 3:
+                        customerManager.viewAllCustomers();
+                        break;
+                    case 4:
+                        System.out.println("Logging out...");
+                        return;  // Logout and return to main menu
+                    default:
+                        System.out.println("Invalid choice.");
+                        break;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter valid numbers.");
+                scanner.nextLine();
+            }
+        }
+    }
+
+    /**
+     * Handles user signup, login, and actions after successful login.
+     *
+     * @param scanner          The Scanner object for user input.
+     * @param loginManager     The LoginManager instance for user authentication.
+     * @param productManager   The ProductManager instance for managing products.
+     * @param customerManager  The CustomerManager instance for managing customer data.
+     * @param orderManager     The OrderManager instance for handling orders.
+     */
+
+    private static void handleUserOptions(Scanner scanner, LoginManager loginManager, ProductManager productManager, CustomerManager customerManager, OrderManager orderManager) {
+        while (true) {
+            try {
+                System.out.println("1. Signup");
+                System.out.println("2. Login");
+                System.out.println("3. Exit");
+                System.out.print("Choose an option: ");
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+    
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter username: ");
+                        String username = scanner.nextLine();
+                        System.out.print("Enter password: ");
+                        String password = scanner.nextLine();
+                        System.out.print("Enter email: ");
+                        String email = scanner.nextLine();
+                        if (loginManager.signup(username, password)) {
+                            Customer customer = customerManager.addCustomer(username, email);  // Add customer on signup
+                        }
+                        break;
+                    case 2:
+                        System.out.print("Enter username: ");
+                        username = scanner.nextLine();
+                        System.out.print("Enter password: ");
+                        password = scanner.nextLine();
+                        User loggedInUser = loginManager.login(username, password);
+    
+                        if (loggedInUser != null) {
+                            // Check if the customer exists in CustomerManager
+                            Customer customer = customerManager.getCustomer(loggedInUser.getUsername());
+                            
+                            // If customer does not exist, create a new customer entry
+                            if (customer == null) {
+                                System.out.println("Customer not found. Creating a new customer profile...");
+                                customer = customerManager.addCustomer(loggedInUser.getUsername(), loggedInUser.getUsername() + "@example.com");
+                            }
+    
+                            System.out.println("Logged in as Customer.");
+                            productManager.viewAllProducts();  // Show all products after login
+                            customerActions(scanner, productManager, customer, orderManager);  // Pass the valid customer object
+                        }
+                        break;
+                    case 3:
+                        System.out.println("Exiting...");
+                        return;
+                    default:
+                        System.out.println("Invalid choice, try again.");
+                        break;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine();
+            }
+        }
+    }
+    
+    /**
+     * Displays the customer actions available after a successful login.
+     *
+     * @param scanner          The Scanner object for user input.
+     * @param productManager   The ProductManager instance for managing products.
+     * @param customer         The Customer instance for the logged-in user.
+     * @param orderManager     The OrderManager instance for handling orders.
+     */
+    
+    private static void customerActions(Scanner scanner, ProductManager productManager, Customer customer, OrderManager orderManager) {
+        while (true) {
+            try {
+                System.out.println("Customer Menu:");
+                System.out.println("1. Search Product");
+                System.out.println("2. Add Product to Cart");
+                System.out.println("3. View Cart");
+                System.out.println("4. Place Order");
+                System.out.println("5. View Order History");
+                System.out.println("6. View Products"); 
+                System.out.println("7. Logout");
+                System.out.print("Choose an option: ");
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+    
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter search keyword: ");
+                        String keyword = scanner.nextLine();
+                        productManager.searchProduct(keyword);
+                        break;
+                    case 2:
+                        System.out.print("Enter Product ID: ");
+                        int productId = scanner.nextInt();
+                        scanner.nextLine();
+                        Product product = productManager.getProductById(productId);
+                        if (product != null) {
+                            System.out.print("Enter quantity: ");
+                            int quantity = scanner.nextInt();
+                            scanner.nextLine();
+                            customer.addToCart(product, quantity); 
+                        } else {
+                            System.out.println("Product not found.");
+                        }
+                        break;
+                    case 3:
+                        customer.getCart().viewCart();
+                        System.out.println("Total Cart Price: Rs" + customer.getCart().calculateTotal());
+                        break;
+                    case 4:
+                        int orderId = orderManager.generateUniqueOrderId();
+                        customer.placeOrder(orderId, "Express");
+                        break;
+                    case 5:
+                        customer.viewOrderHistory();
+                        break;
+                    case 6:
+                        // New option for users to view all products
+                        productManager.viewAllProducts();
+                        break;
+                    case 7:
+                        System.out.println("Logging out...");
+                        return;  // Logout and return to main menu
+                    default:
+                        System.out.println("Invalid choice.");
+                        break;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter valid numbers.");
+                scanner.nextLine();
+            }
+        }
+    }
+}
